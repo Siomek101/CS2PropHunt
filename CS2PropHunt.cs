@@ -104,13 +104,6 @@ namespace CS2PropHunt
                 teleportedPlayers = false;
                 props.Clear();
 
-                foreach (var player in Utilities.GetPlayers())
-                {
-                    if(player.Team == CsTeam.CounterTerrorist)
-                    {
-                        PropSpawner(player);
-                    }
-                }
 
                 var offset = -20;
 
@@ -148,6 +141,14 @@ namespace CS2PropHunt
                 CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -150));
                 CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -120));
                 CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -90));
+
+                foreach (var player in Utilities.GetPlayers())
+                {
+                    if (player.Team == CsTeam.CounterTerrorist)
+                    {
+                        PropSpawner(player);
+                    }
+                }
 
                 return HookResult.Continue;
             },HookMode.Post);
