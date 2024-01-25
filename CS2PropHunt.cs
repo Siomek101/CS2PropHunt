@@ -46,8 +46,6 @@ namespace CS2PropHunt
             {
                 spawnTerroristOffset = 0;
                 Server.ExecuteCommand("mp_give_player_c4 0");
-                Server.ExecuteCommand("mp_roundtime_defuse 5");
-                Server.ExecuteCommand("mp_freezetime 0");
                 models.Clear();
 
             });
@@ -164,9 +162,9 @@ namespace CS2PropHunt
                         player.PrintToCenter("Hiding time: " + hideTime.Subtract(DateTime.Now).ToString("mm\\:ss"));
                     } else if (!teleportedPlayers)
                     {
-                        if (player.Team == CsTeam.Terrorist)
+                        if (player.Pawn.IsValid)
                         {
-                            if (player.Pawn.IsValid)
+                            if (player.Team == CsTeam.Terrorist)
                             {
                                 if (Server.MapName == "de_mirage")
                                 {
