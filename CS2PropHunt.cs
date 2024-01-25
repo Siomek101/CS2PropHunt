@@ -15,10 +15,8 @@ namespace CS2PropHunt
     {
         public override string ModuleName => "CS2 Prop Hunt Plugin";
 
-        public override string ModuleVersion => "0.0.1";
+        public override string ModuleVersion => "0.0.2";
 
-        public const string GETMODELSIGNATURE = "40 53 48 83 EC 20 48 8B 41 30 48 8B D9 48 8B 48 08 48 8B 01 ? ? ? 48 85";
-        
         public List<string> models = new List<string>();
 
         int spawnTerroristOffset = 0;
@@ -40,25 +38,17 @@ namespace CS2PropHunt
 
         public override void Load(bool hotReload)
         {
-            models.Add("models/props_junk/plasticcrate01a.vmdl");
-            models.Add("models/props_junk/garbage_sodacup01a.vmdl");
-            models.Add("models/props_c17/chair_stool01a.vmdl");
-            models.Add("models/props_junk/cinderblock01a.vmdl");
-            models.Add("models/props_junk/garbage_spraypaintcan01a.vmdl");
-            models.Add("models/props_junk/metalbucket01a.vmdl");
-            models.Add("models/props/de_inferno/claypot03.vmdl");
-            //models.Add("models/props_furniture/cafe_barstooll.vmdl");
-            //models.Add("models/props_junk/metalpaintcan01a.vmdl");
-            models.Add("models/props/gg_vietnam/cloth03.vmdl");
 
-            //models.Clear();
+            models.Clear();
+            models.Add("models/props/de_inferno/claypot03.vmdl");
+
             RegisterListener<CounterStrikeSharp.API.Core.Listeners.OnMapStart>(ev =>
             {
                 spawnTerroristOffset = 0;
                 Server.ExecuteCommand("mp_give_player_c4 0");
                 Server.ExecuteCommand("mp_roundtime_defuse 5");
                 Server.ExecuteCommand("mp_freezetime 0");
-                //models.Clear();
+                models.Clear();
 
             });
 
@@ -72,13 +62,37 @@ namespace CS2PropHunt
                     //var getModel = new VirtualFunctionWithReturn<IntPtr,string>(GETMODELSIGNATURE);
                     //string model = getModel.Invoke(entity.Handle);
                     //Console.WriteLine(model);
+
+                    var GETMODELSIGNATURE = "\\x40\\x53\\x48\\x83\\xEC\\x20\\x48\\x8B\\x41\\x30\\x48\\x8B\\xD9\\x48\\x8B\\x48\\x08\\x48\\x8B\\x01\\x2A\\x2A\\x2A\\x48\\x85";
+
+                    var getModel = new VirtualFunctionWithReturn<IntPtr, string>(GETMODELSIGNATURE);
+                    string model = getModel.Invoke(entity.Handle);
+
+                    if (!models.Contains(model))
+                    {
+                        models.Add(model);
+                        Console.WriteLine(model);
+                    }
+
+                    
+                }
+                if(entity.DesignerName == "func_buyzone")
+                {
+                    entity.Remove();
                 }
 
                 if (entity.DesignerName == "info_player_terrorist")
                 {
                     var spawn = new CInfoPlayerTerrorist(entity.Handle);
 
-                    spawn.Teleport(new Vector(1766 - spawnTerroristOffset, 660, -160 ), new QAngle(0,0,0), new Vector(0, 0, 0));
+                    if (Server.MapName == "de_mirage")
+                    {
+                        spawn.Teleport(new Vector(1766 - spawnTerroristOffset, 660, -160), new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                    }
+                    if (Server.MapName == "de_inferno")
+                    {
+                        spawn.Teleport(new Vector(454, 384 , 136), new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                    }
                     spawnTerroristOffset += 30;
 
 
@@ -150,10 +164,20 @@ namespace CS2PropHunt
                         player.PrintToCenter("Hiding time: " + hideTime.Subtract(DateTime.Now).ToString("mm\\:ss"));
                     } else if (!teleportedPlayers)
                     {
-                        if (player.Pawn.IsValid)
+                        if (player.Team == CsTeam.Terrorist)
                         {
-                            player.Pawn.Value.Teleport(new Vector(1316, -421 + offs, -103), new QAngle(0, -180, 0), new Vector(0, 0, 0));
-                            offs += 30;
+                            if (player.Pawn.IsValid)
+                            {
+                                if (Server.MapName == "de_mirage")
+                                {
+                                    player.Pawn.Value.Teleport(new Vector(1316, -421 + offs, -103), new QAngle(0, -180, 0), new Vector(0, 0, 0));
+                                }
+                                if (Server.MapName == "de_inferno")
+                                {
+                                    player.Pawn.Value.Teleport(new Vector(670 - offs, 494, 136), new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                                }
+                                offs += 30;
+                            }
                         }
                     }
                     if (!player.Pawn.IsValid) continue;
@@ -165,7 +189,7 @@ namespace CS2PropHunt
                         if (item.playerId == player.SteamID)
                         {
                             if (!player.Pawn.IsValid) continue;
-                            var off = offset(player.Pawn.Value.AbsOrigin, new Vector(0, 0, 7));
+                            var off = offset(player.Pawn.Value.AbsOrigin, new Vector(0, 0, 0));
                             if (true || item.lastPlayerPos.X != off.X || item.lastPlayerPos.Z != off.Z || item.lastPlayerPos.Y != off.Y || item.weirdStuff) { 
                                 item.Teleport(off, /*new QAngle(item.prop.AbsRotation.X, player.Pawn.Value.AbsRotation.Y, item.prop.AbsRotation.Z)*/ new QAngle(0, player.Pawn.Value.AbsRotation.Y, 0));
                                 //item.weirdStuff = !(item.lastPlayerPos2.X == item.lastPlayerPos.X && item.lastPlayerPos2.Z == item.lastPlayerPos.Z && item.lastPlayerPos2.Y == item.lastPlayerPos.Y);
