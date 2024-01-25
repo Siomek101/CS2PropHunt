@@ -144,9 +144,14 @@ namespace CS2PropHunt
 
                 foreach (var player in Utilities.GetPlayers())
                 {
-                    if (player.Team == CsTeam.CounterTerrorist)
+                    try
                     {
-                        PropSpawner(player);
+                        if (player.Team == CsTeam.CounterTerrorist)
+                        {
+                            PropSpawner(player);
+                        }
+                    } catch (Exception e) { 
+                        // Shut the f up
                     }
                 }
 
