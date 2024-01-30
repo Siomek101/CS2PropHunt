@@ -2,12 +2,9 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
-using System;
 using System.Drawing;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace CS2PropHunt
@@ -16,7 +13,7 @@ namespace CS2PropHunt
     {
         public override string ModuleName => "CS2 Prop Hunt Plugin";
 
-        public override string ModuleVersion => "0.0.2";
+        public override string ModuleVersion => "0.0.4";
 
         public List<string> models = new List<string>();
 
@@ -42,6 +39,7 @@ namespace CS2PropHunt
 
             models.Clear();
             models.Add("models/props/de_inferno/claypot03.vmdl");
+            Server.PrintToChatAll("Prop hunt not set. Please restart round.");
 
             RegisterListener<CounterStrikeSharp.API.Core.Listeners.OnMapStart>(ev =>
             {
@@ -151,6 +149,7 @@ namespace CS2PropHunt
                         if (player.Team == CsTeam.CounterTerrorist)
                         {
                             PropSpawner(player);
+
                         }
                     } catch (Exception e) { 
                         // Shut the f up
@@ -194,24 +193,32 @@ namespace CS2PropHunt
 
                         if (item.playerId == player.SteamID)
                         {
+                            if (player.Team == CsTeam.Spectator)
+                            {
+                                item.prop.Remove();
+                                props.Remove(item);
+                                break;
+                            }
                             if (!player.Pawn.IsValid) continue;
-                            var off = offset(player.Pawn.Value.AbsOrigin, new Vector(0, 0, 0));
-                            if (true || item.lastPlayerPos.X != off.X || item.lastPlayerPos.Z != off.Z || item.lastPlayerPos.Y != off.Y || item.weirdStuff) { 
+                            var off = offset(player.Pawn.Value.AbsOrigin, new Vector(0, 0, 5));
+                            if (!item.Frozen ) {//|| item.lastPlayerPos.X != off.X || item.lastPlayerPos.Z != off.Z || item.lastPlayerPos.Y != off.Y || item.weirdStuff) { 
                                 item.Teleport(off, /*new QAngle(item.prop.AbsRotation.X, player.Pawn.Value.AbsRotation.Y, item.prop.AbsRotation.Z)*/ new QAngle(0, player.Pawn.Value.AbsRotation.Y, 0));
                                 //item.weirdStuff = !(item.lastPlayerPos2.X == item.lastPlayerPos.X && item.lastPlayerPos2.Z == item.lastPlayerPos.Z && item.lastPlayerPos2.Y == item.lastPlayerPos.Y);
                                 item.weirdStuff = false;
+                                player.GravityScale = 1;
                             }                       
                             else
                             {
-                                if (CalculateDistance(item.prop.AbsOrigin, player.Pawn.Value.AbsOrigin) > 20)
+                                if (CalculateDistance(item.prop.AbsOrigin, player.Pawn.Value.AbsOrigin) > 5 || true)
                                 {
-                                    item.weirdStuff = true;
-                                    item.lastPlayerPos2 = player.Pawn.Value.AbsOrigin;
+                                    player.Pawn.Value.Teleport(item.prop.AbsOrigin, new QAngle(IntPtr.Zero), new Vector(0,0,0));
                                 }
-                                    
+                                player.GravityScale = 0;
+
                                 //item.Teleport(off);
 
                             }
+                            if (hideTime.CompareTo(DateTime.Now) <= 0) player.PrintToCenter("Swaps left: " + item.Swaps + ", You are " + (item.Frozen ? "" : "not ") + "frozen.");
                             found = true;
                             break;
                         }
@@ -261,13 +268,17 @@ namespace CS2PropHunt
             public Vector lastPlayerPos = new Vector(0, 0, 0);
             public Vector lastPlayerPos2 = new Vector(0, 0, 0);
             public int modelID = 0;
+            public int Swaps = 2;
+            public bool Frozen = false;
 
             public SpecialProp(CS2PropHunt plugin, CDynamicProp prop, ulong userId, int modelId)
             {
                 this.prop = prop;
                 playerId = userId;
                 this.plugin = plugin;
-                this.modelID = modelId;
+                modelID = modelId;
+                Swaps = 2;
+                Frozen = false;
             }
             public void Teleport(Vector position, QAngle angle, Vector velocity)
             {
@@ -291,7 +302,7 @@ namespace CS2PropHunt
 
         List<SpecialProp> props = new List<SpecialProp>();
 
-        [ConsoleCommand("spawn_prop", "i love props")]
+        [ConsoleCommand("swap_prop", "Swap prop for another prop (infinite times when hiding time, after that only 2 times)")]
         public void spawnProp(CCSPlayerController? player, CommandInfo command)
         {
             PropSpawner(player);
@@ -302,6 +313,7 @@ namespace CS2PropHunt
             {
                 return;
             }
+            var modelId = Random.Shared.Next(0, models.Count - 1);
 
             foreach (var item in props)
             {
@@ -309,8 +321,26 @@ namespace CS2PropHunt
                 if (item.playerId == player.SteamID)
                 {
                     if (!player.Pawn.IsValid) continue;
+                    var canSwap = hideTime.CompareTo(DateTime.Now) > 0;
+                    if (!canSwap)
+                    {
+                        if (item.Swaps > 0)
+                        {
+                            canSwap = true;
+                            item.Swaps--;
+                        }
+                        
+                    }
+                    if (canSwap)
+                    {
+                        if(models.Count > 1)
+                        while (item.modelID == modelId) modelId = Random.Shared.Next(0, models.Count - 1);
+
+                        item.prop.SetModel(models[modelId]);
+                        item.modelID = modelId;
+                    }
+                    
                     return;
-                    break;
                 }
             }
 
@@ -319,7 +349,6 @@ namespace CS2PropHunt
             prop.DispatchSpawn();
             prop.Teleport(player.Pawn.Value.AbsOrigin, new QAngle(0, 0, 0), new Vector(0, 0, 0));
             prop.Globalname = "test_prop";
-            var modelId = Random.Shared.Next(0, models.Count - 1);
             prop.SetModel(models[modelId]);
             /*if (Server.MapName == "de_mirage")
             {
@@ -329,7 +358,7 @@ namespace CS2PropHunt
             {
                 prop.SetModel("models/generic/planter_kit_01/pk01_planter_09_cressplant_breakable_b.vmdl");
             }*/
-            prop.Collision.CollisionGroup = 2;
+            prop.Collision.CollisionGroup = 2; // best is 2
 
             props.Add(new SpecialProp(this, prop, player.SteamID, modelId));
 
@@ -339,7 +368,7 @@ namespace CS2PropHunt
 
         }
 
-        [ConsoleCommand("remove_prop", "i hate props")]
+        [ConsoleCommand("freeze_prop", "Freeze prop")]
         public void PropRemover(CCSPlayerController? player, CommandInfo command)
         {
             if (player == null)
@@ -351,10 +380,7 @@ namespace CS2PropHunt
             {
                 if (item.playerId == player.SteamID)
                 {
-                    item.prop.Remove();
-                    props.Remove(item);
-
-                    player.GiveNamedItem("weapon_knife");
+                    item.Frozen = !item.Frozen;
                     return;
                 }
             }
