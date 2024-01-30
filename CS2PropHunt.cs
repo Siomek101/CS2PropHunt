@@ -13,7 +13,7 @@ namespace CS2PropHunt
     {
         public override string ModuleName => "CS2 Prop Hunt Plugin";
 
-        public override string ModuleVersion => "0.1.2";
+        public override string ModuleVersion => "0.1.3";
 
         public List<string> models = new List<string>();
 
@@ -233,6 +233,10 @@ namespace CS2PropHunt
                                 if (Server.MapName == "de_inferno")
                                 {
                                     player.Pawn.Value.Teleport(new Vector(670 - offs, 494, 136), new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                                }
+                                if (Server.MapName == "cs_office")
+                                {
+                                    player.Pawn.Value.Teleport(new Vector(814 - offs, -495, -110), new QAngle(0, 0, 0), new Vector(0, 0, 0));
                                 }
                                 offs += 30;
 
