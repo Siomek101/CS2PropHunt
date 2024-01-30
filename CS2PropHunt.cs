@@ -8,6 +8,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using System;
 using System.Drawing;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace CS2PropHunt
 {
@@ -62,8 +63,9 @@ namespace CS2PropHunt
                     //Console.WriteLine(model);
 
                     var GETMODELSIGNATURE = "\\x40\\x53\\x48\\x83\\xEC\\x20\\x48\\x8B\\x41\\x30\\x48\\x8B\\xD9\\x48\\x8B\\x48\\x08\\x48\\x8B\\x01\\x2A\\x2A\\x2A\\x48\\x85";
-
-                    var getModel = new VirtualFunctionWithReturn<IntPtr, string>(GETMODELSIGNATURE);
+                    var GETMODELSIGNATURE_LINUX = "\\x55\\x48\\x89\\xE5\\x53\\x48\\x89\\xFB\\x48\\x83\\xEC\\x08\\x48\\x8B\\x47\\x30";
+                    
+                    var getModel = new VirtualFunctionWithReturn<IntPtr, string>(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? GETMODELSIGNATURE_LINUX : GETMODELSIGNATURE);
                     string model = getModel.Invoke(entity.Handle);
 
                     if (!models.Contains(model))
