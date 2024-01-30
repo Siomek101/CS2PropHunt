@@ -113,12 +113,12 @@ namespace CS2PropHunt
 
                     if (Server.MapName == "de_mirage")
                     {
-                        if (spawnTerroristOffset > mirageSpawns.Length) spawnTerroristOffset = 0;
+                        if (spawnTerroristOffset > mirageSpawns.Length-1) spawnTerroristOffset = 0;
                         spawn.Teleport(mirageSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
                     }
                     if (Server.MapName == "de_inferno")
                     {
-                        if (spawnTerroristOffset > infernoSpawns.Length) spawnTerroristOffset = 0;
+                        if (spawnTerroristOffset > infernoSpawns.Length-1) spawnTerroristOffset = 0;
                         spawn.Teleport(infernoSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
                     }
                     spawnTerroristOffset += 1;
