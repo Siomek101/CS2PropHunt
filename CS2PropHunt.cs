@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Drawing;
@@ -13,7 +14,7 @@ namespace CS2PropHunt
     {
         public override string ModuleName => "CS2 Prop Hunt Plugin";
 
-        public override string ModuleVersion => "0.0.5";
+        public override string ModuleVersion => "0.0.6";
 
         public List<string> models = new List<string>();
 
@@ -89,7 +90,7 @@ namespace CS2PropHunt
                     }
                     if (Server.MapName == "de_inferno")
                     {
-                        spawn.Teleport(new Vector(454, 384 , 136), new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                        spawn.Teleport(new Vector(940, 1404 - spawnTerroristOffset, 157), new QAngle(0, 0, 0), new Vector(0, 0, 0));
                     }
                     spawnTerroristOffset += 30;
 
@@ -97,7 +98,6 @@ namespace CS2PropHunt
                 }
 
             });
-
             RegisterEventHandler<EventRoundStart>((ev,@info) =>
             {
                 hideTime = DateTime.Now.AddMinutes(1);
@@ -171,7 +171,7 @@ namespace CS2PropHunt
                     {
                         if (player.Pawn.IsValid)
                         {
-                            if (player.Team == CsTeam.Terrorist)
+                            if (player.TeamNum == 2)
                             {
                                 if (Server.MapName == "de_mirage")
                                 {
@@ -193,7 +193,7 @@ namespace CS2PropHunt
 
                         if (item.playerId == player.SteamID)
                         {
-                            if (player.Team == CsTeam.Spectator)
+                            if (player.TeamNum == 1)
                             {
                                 item.prop.Remove();
                                 props.Remove(item);
@@ -245,6 +245,13 @@ namespace CS2PropHunt
                 {
                     teleportedPlayers = true;
                 }
+            });
+
+            HookEntityOutput("prop_dynamic", "OnTakeDamage", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
+            {
+                caller.Remove();
+
+                return HookResult.Continue;
             });
         }
         private float CalculateDistance(Vector point1, Vector point2)
@@ -327,7 +334,6 @@ namespace CS2PropHunt
                 prop.Globalname = "test_prop";
                 prop.SetModel(models[foundProp.modelID]);
                 prop.Collision.CollisionGroup = 2;
-                //prop.OnTakeDamage = new CEntityIOOutput()
                 player.PrintToChat("Decoys Left: " + foundProp.DecoysLeft);
 
             } else
