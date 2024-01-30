@@ -49,6 +49,19 @@ namespace CS2PropHunt
                         new Vector(-1990, -905, 8), // i like oob
 
                     };
+        Vector[] officeSpawns = new Vector[] {
+            new Vector(-73,-1268,-180),
+            new Vector(-43,-1268,-180),
+            new Vector(-33,-1268,-180),
+            new Vector(1180,-511,-120),
+            new Vector(1180,-411,-120),
+            new Vector(-2052,-1430,-250),
+            new Vector(-583,420,-323),
+            new Vector(-1237,-2910,-355),
+            new Vector(-1207,-2910,-355),
+            new Vector(-1167,-2910,-355),
+
+        };
 
         CDynamicProp CreateProp(string model, Vector position)
         {
@@ -118,8 +131,13 @@ namespace CS2PropHunt
                     }
                     if (Server.MapName == "de_inferno")
                     {
-                        if (spawnTerroristOffset > infernoSpawns.Length-1) spawnTerroristOffset = 0;
+                        if (spawnTerroristOffset > infernoSpawns.Length - 1) spawnTerroristOffset = 0;
                         spawn.Teleport(infernoSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                    }
+                    if (Server.MapName == "cs_office")
+                    {
+                        if (spawnTerroristOffset > officeSpawns.Length - 1) spawnTerroristOffset = 0;
+                        spawn.Teleport(officeSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
                     }
                     spawnTerroristOffset += 1;
 
@@ -196,6 +214,12 @@ namespace CS2PropHunt
                 {
                     if (hideTime.CompareTo(DateTime.Now) > 0) {
                         player.PrintToCenter("Hiding time: " + hideTime.Subtract(DateTime.Now).ToString("mm\\:ss"));
+
+                        if (player.TeamNum == 2)
+                        {
+                            player.RemoveWeapons();
+                        }
+
                     } else if (!teleportedPlayers)
                     {
                         if (player.Pawn.IsValid)
@@ -211,6 +235,14 @@ namespace CS2PropHunt
                                     player.Pawn.Value.Teleport(new Vector(670 - offs, 494, 136), new QAngle(0, 0, 0), new Vector(0, 0, 0));
                                 }
                                 offs += 30;
+
+                                player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.P90);
+                                player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.Knife);
+                                player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.USP);
+                            }
+                            if(player.TeamNum == 3)
+                            {
+                                player.RemoveWeapons();
                             }
                         }
                     }
@@ -434,6 +466,7 @@ namespace CS2PropHunt
 
                 player.RemoveItemByDesignerName("weapon_c4");
                 player.RemoveWeapons();
+                player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.Knife);
                 player.Pawn.Value.Health = 1;
             }
 
