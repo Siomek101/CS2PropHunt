@@ -13,7 +13,7 @@ namespace CS2PropHunt
     {
         public override string ModuleName => "CS2 Prop Hunt Plugin";
 
-        public override string ModuleVersion => "0.1.1";
+        public override string ModuleVersion => "0.1.2";
 
         public List<string> models = new List<string>();
 
