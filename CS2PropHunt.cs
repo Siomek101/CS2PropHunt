@@ -148,7 +148,7 @@ namespace CS2PropHunt
                     {
                         if (player.Team == CsTeam.CounterTerrorist)
                         {
-                            PropSpawner(player);
+                            PropSpawner(player,true);
 
                         }
                     } catch (Exception e) { 
@@ -200,7 +200,7 @@ namespace CS2PropHunt
                                 break;
                             }
                             if (!player.Pawn.IsValid) continue;
-                            var off = offset(player.Pawn.Value.AbsOrigin, new Vector(0, 0, 5));
+                            var off = offset(player.Pawn.Value.AbsOrigin, new Vector(0, 0, 0));
                             if (!item.Frozen ) {//|| item.lastPlayerPos.X != off.X || item.lastPlayerPos.Z != off.Z || item.lastPlayerPos.Y != off.Y || item.weirdStuff) { 
                                 item.Teleport(off, /*new QAngle(item.prop.AbsRotation.X, player.Pawn.Value.AbsRotation.Y, item.prop.AbsRotation.Z)*/ new QAngle(0, player.Pawn.Value.AbsRotation.Y, 0));
                                 //item.weirdStuff = !(item.lastPlayerPos2.X == item.lastPlayerPos.X && item.lastPlayerPos2.Z == item.lastPlayerPos.Z && item.lastPlayerPos2.Y == item.lastPlayerPos.Y);
@@ -269,6 +269,7 @@ namespace CS2PropHunt
             public Vector lastPlayerPos2 = new Vector(0, 0, 0);
             public int modelID = 0;
             public int Swaps = 2;
+            public int DecoysLeft = 3;
             public bool Frozen = false;
 
             public SpecialProp(CS2PropHunt plugin, CDynamicProp prop, ulong userId, int modelId)
@@ -279,6 +280,7 @@ namespace CS2PropHunt
                 modelID = modelId;
                 Swaps = 2;
                 Frozen = false;
+                DecoysLeft = 3;
             }
             public void Teleport(Vector position, QAngle angle, Vector velocity)
             {
@@ -302,12 +304,44 @@ namespace CS2PropHunt
 
         List<SpecialProp> props = new List<SpecialProp>();
 
+        [ConsoleCommand("spawn_decoy", "Spawn a fake prop at your legs")]
+        public void spawnDecoy(CCSPlayerController? player, CommandInfo command)
+        {
+            SpecialProp? foundProp = null;
+            foreach (var item in props)
+            {
+
+                if (item.playerId == player.SteamID)
+                {
+                    foundProp = item; break;
+                }
+
+            }
+            if (foundProp == null) return;
+            if(foundProp.DecoysLeft > 0)
+            {
+                foundProp.DecoysLeft--;
+                CDynamicProp prop = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+                prop.DispatchSpawn();
+                prop.Teleport(foundProp.prop.AbsOrigin, foundProp.prop.AbsRotation, foundProp.prop.AbsVelocity);
+                prop.Globalname = "test_prop";
+                prop.SetModel(models[foundProp.modelID]);
+                prop.Collision.CollisionGroup = 2;
+                //prop.OnTakeDamage = new CEntityIOOutput()
+                player.PrintToChat("Decoys Left: " + foundProp.DecoysLeft);
+
+            } else
+            {
+                player.PrintToChat("No decoys!");
+            }
+        }
+
         [ConsoleCommand("swap_prop", "Swap prop for another prop (infinite times when hiding time, after that only 2 times)")]
         public void spawnProp(CCSPlayerController? player, CommandInfo command)
         {
             PropSpawner(player);
         }
-        public void PropSpawner(CCSPlayerController? player)
+        public void PropSpawner(CCSPlayerController? player, bool allowCreate = false)
         {
             if (player == null)
             {
@@ -343,28 +377,30 @@ namespace CS2PropHunt
                     return;
                 }
             }
-
-            // Spawn
-            CDynamicProp prop = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
-            prop.DispatchSpawn();
-            prop.Teleport(player.Pawn.Value.AbsOrigin, new QAngle(0, 0, 0), new Vector(0, 0, 0));
-            prop.Globalname = "test_prop";
-            prop.SetModel(models[modelId]);
-            /*if (Server.MapName == "de_mirage")
+            if (allowCreate || player.Team == CsTeam.CounterTerrorist)
             {
-                prop.SetModel("models/props_junk/plasticcrate01a.vmdl");
+                // Spawn
+                CDynamicProp prop = Utilities.CreateEntityByName<CDynamicProp>("prop_dynamic");
+                prop.DispatchSpawn();
+                prop.Teleport(player.Pawn.Value.AbsOrigin, new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                prop.Globalname = "test_prop";
+                prop.SetModel(models[modelId]);
+                /*if (Server.MapName == "de_mirage")
+                {
+                    prop.SetModel("models/props_junk/plasticcrate01a.vmdl");
+                }
+                if (Server.MapName == "de_inferno")
+                {
+                    prop.SetModel("models/generic/planter_kit_01/pk01_planter_09_cressplant_breakable_b.vmdl");
+                }*/
+                prop.Collision.CollisionGroup = 2; // best is 2
+
+                props.Add(new SpecialProp(this, prop, player.SteamID, modelId));
+
+                player.RemoveItemByDesignerName("weapon_c4");
+                player.RemoveWeapons();
+                player.Pawn.Value.Health = 1;
             }
-            if (Server.MapName == "de_inferno")
-            {
-                prop.SetModel("models/generic/planter_kit_01/pk01_planter_09_cressplant_breakable_b.vmdl");
-            }*/
-            prop.Collision.CollisionGroup = 2; // best is 2
-
-            props.Add(new SpecialProp(this, prop, player.SteamID, modelId));
-
-            player.RemoveItemByDesignerName("weapon_c4");
-            player.RemoveWeapons();
-            player.Pawn.Value.Health = 1;
 
         }
 
