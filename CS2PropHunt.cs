@@ -2,7 +2,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Drawing;
@@ -14,7 +13,7 @@ namespace CS2PropHunt
     {
         public override string ModuleName => "CS2 Prop Hunt Plugin";
 
-        public override string ModuleVersion => "0.1.0";
+        public override string ModuleVersion => "0.1.1";
 
         public List<string> models = new List<string>();
 
@@ -22,6 +21,34 @@ namespace CS2PropHunt
 
         DateTime hideTime = DateTime.Now;
         bool teleportedPlayers = false;
+        Vector[] infernoSpawns = new Vector[] {
+            new Vector(940, 1404, 157),
+                        new Vector(940, 1364, 157),
+                        new Vector(940, 1334, 157),
+                        new Vector(940, 1304, 157),
+                        new Vector(1000, 2915, 192),
+                        new Vector(474, -354, 132),
+                        new Vector(504, -354, 132),
+                        new Vector(534, -354, 132),
+                        new Vector(564, -354, 132),
+                        new Vector(1850, 871, 192),
+                        new Vector(1820, 871, 192),
+                        new Vector(1710, 871, 192),
+
+                    };
+        Vector[] mirageSpawns = new Vector[] {
+                        new Vector(1766, 660, -160), // oob t spawn
+                        new Vector(1736, 660, -160),
+                        new Vector(1706, 660, -160),
+                        new Vector(1676, 660, -160),
+                        new Vector(806, -2244, 232), // Palace A site
+                        new Vector(776, -2244, 232),
+                        new Vector(746, -2244, 232),
+                        new Vector(1007, -957, 64), // OOB t spawn but cool
+                        new Vector(30, -994, -23), // 2 trees at mid
+                        new Vector(-1990, -905, 8), // i like oob
+
+                    };
 
         CDynamicProp CreateProp(string model, Vector position)
         {
@@ -82,34 +109,6 @@ namespace CS2PropHunt
 
                 if (entity.DesignerName == "info_player_terrorist")
                 {
-                    Vector[] infernoSpawns = new Vector[] {
-                        new Vector(940, 1404, 157),
-                        new Vector(940, 1364, 157),
-                        new Vector(940, 1334, 157),
-                        new Vector(940, 1304, 157),
-                        new Vector(1000, 2915, 192),
-                        new Vector(474, -354, 132),
-                        new Vector(504, -354, 132),
-                        new Vector(534, -354, 132),
-                        new Vector(564, -354, 132),
-                        new Vector(1850, 871, 192),
-                        new Vector(1820, 871, 192),
-                        new Vector(1710, 871, 192),
-
-                    };
-                    Vector[] mirageSpawns = new Vector[] {
-                        new Vector(1766, 660, -160), // oob t spawn
-                        new Vector(1736, 660, -160),
-                        new Vector(1706, 660, -160),
-                        new Vector(1676, 660, -160),
-                        new Vector(806, -2244, 232), // Palace A site
-                        new Vector(776, -2244, 232),
-                        new Vector(746, -2244, 232),
-                        new Vector(1007, -957, 64), // OOB t spawn but cool
-                        new Vector(30, -994, -23), // 2 trees at mid
-                        new Vector(-1990, -905, 8), // i like oob
-
-                    };
                     var spawn = new CInfoPlayerTerrorist(entity.Handle);
 
                     if (Server.MapName == "de_mirage")
@@ -122,7 +121,7 @@ namespace CS2PropHunt
                         if (spawnTerroristOffset > infernoSpawns.Length) spawnTerroristOffset = 0;
                         spawn.Teleport(infernoSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
                     }
-                    spawnTerroristOffset ++;
+                    spawnTerroristOffset += 1;
 
 
                 }
@@ -223,7 +222,7 @@ namespace CS2PropHunt
 
                         if (item.playerId == player.SteamID)
                         {
-                            if (player.TeamNum == 1)
+                            if (player.Team == CsTeam.Spectator)
                             {
                                 item.prop.Remove();
                                 props.Remove(item);
