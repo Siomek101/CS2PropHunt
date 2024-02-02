@@ -13,7 +13,7 @@ namespace CS2PropHunt
     {
         public override string ModuleName => "CS2 Prop Hunt Plugin";
 
-        public override string ModuleVersion => "0.1.3";
+        public override string ModuleVersion => "0.1.5";
 
         public List<string> models = new List<string>();
 
@@ -151,44 +151,45 @@ namespace CS2PropHunt
                 teleportedPlayers = false;
                 props.Clear();
 
+                if (Server.MapName == "de_mirage")
+                {
+                    var offset = -20;
 
-                var offset = -20;
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -240));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -210));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -180));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -150));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -120));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -90));
 
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -240));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -210));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -180));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -150));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -120));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -90));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -240));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -210));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -180));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -150));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -120));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -90));
 
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -240));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -210));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -180));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -150));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -120));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -90));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -240));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -210));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -180));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -150));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -120));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -90));
 
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -240));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -210));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -180));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -150));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -120));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -90));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -240));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -210));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -180));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -150));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -120));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -90));
 
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -240));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -210));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -180));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -150));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -120));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -90));
-
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -240));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -210));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -180));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -150));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -120));
-                CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -90));
-
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -240));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -210));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -180));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -150));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -120));
+                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -90));
+                }
                 foreach (var player in Utilities.GetPlayers())
                 {
                     try
@@ -258,13 +259,52 @@ namespace CS2PropHunt
 
                         if (item.playerId == player.SteamID)
                         {
-                            if (player.Team == CsTeam.Spectator)
+                            if (player.Team == CsTeam.Spectator || !player.PawnIsAlive)
                             {
                                 item.prop.Remove();
                                 props.Remove(item);
                                 break;
                             }
                             if (!player.Pawn.IsValid) continue;
+
+                            var buttons = player.Buttons;
+                            if ((buttons & PlayerButtons.Use) != 0)
+                            {
+                                if (!item.AtkOnce)
+                                {
+                                    PropFreezer(player, null);
+                                    item.AtkOnce = true;
+                                }
+                            } else
+                            {
+                                item.AtkOnce = false;
+                            }
+                            if ((buttons & PlayerButtons.Attack2) != 0)
+                            {
+                                if (!item.Atk2Once)
+                                {
+                                    PropSpawner(player);
+                                    item.Atk2Once = true;
+                                }
+                            }
+                            else
+                            {
+                                item.Atk2Once = false;
+                            }
+                            if ((buttons & PlayerButtons.Reload) != 0)
+                            {
+                                if (!item.RelOnce)
+                                {
+                                    spawnDecoy(player, null);
+                                    item.RelOnce = true;
+                                }
+                            }
+                            else
+                            {
+                                item.RelOnce = false;
+                            }
+
+
                             var off = offset(player.Pawn.Value.AbsOrigin, new Vector(0, 0, 0));
                             if (!item.Frozen ) {//|| item.lastPlayerPos.X != off.X || item.lastPlayerPos.Z != off.Z || item.lastPlayerPos.Y != off.Y || item.weirdStuff) { 
                                 item.Teleport(off, /*new QAngle(item.prop.AbsRotation.X, player.Pawn.Value.AbsRotation.Y, item.prop.AbsRotation.Z)*/ new QAngle(0, player.Pawn.Value.AbsRotation.Y, 0));
@@ -344,6 +384,11 @@ namespace CS2PropHunt
             public int DecoysLeft = 3;
             public bool Frozen = false;
 
+            // Button Once
+            public bool AtkOnce = false;
+            public bool Atk2Once = false;
+            public bool RelOnce = false;
+
             public SpecialProp(CS2PropHunt plugin, CDynamicProp prop, ulong userId, int modelId)
             {
                 this.prop = prop;
@@ -377,7 +422,7 @@ namespace CS2PropHunt
         List<SpecialProp> props = new List<SpecialProp>();
 
         [ConsoleCommand("spawn_decoy", "Spawn a fake prop at your legs")]
-        public void spawnDecoy(CCSPlayerController? player, CommandInfo command)
+        public void spawnDecoy(CCSPlayerController? player, CommandInfo? command)
         {
             SpecialProp? foundProp = null;
             foreach (var item in props)
@@ -477,7 +522,7 @@ namespace CS2PropHunt
         }
 
         [ConsoleCommand("freeze_prop", "Freeze prop")]
-        public void PropRemover(CCSPlayerController? player, CommandInfo command)
+        public void PropFreezer(CCSPlayerController? player, CommandInfo? command)
         {
             if (player == null)
             {
