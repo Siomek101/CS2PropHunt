@@ -13,7 +13,7 @@ namespace CS2PropHunt
     {
         public override string ModuleName => "CS2 Prop Hunt Plugin";
 
-        public override string ModuleVersion => "0.1.5";
+        public override string ModuleVersion => "0.1.6";
 
         public List<string> models = new List<string>();
 
@@ -75,6 +75,21 @@ namespace CS2PropHunt
             return prop;
         }
 
+        public static bool PropHuntEnabled = false;
+
+        [ConsoleCommand("sv_enable_prophunt", "enable prop hunt")]
+        public void ProphuntEnabler(CCSPlayerController? player, CommandInfo cmdInfo)
+        {
+            if(player != null) { return; }
+            if (cmdInfo.ArgString.Length == 1)
+            {
+                PropHuntEnabled = cmdInfo.ArgString == "1";
+                cmdInfo.ReplyToCommand("sv_enable_prophunt = " + PropHuntEnabled);
+                return;
+            }
+            cmdInfo.ReplyToCommand("sv_enable_prophunt = " + PropHuntEnabled);
+
+        }
         public override void Load(bool hotReload)
         {
 
@@ -84,278 +99,296 @@ namespace CS2PropHunt
 
             RegisterListener<CounterStrikeSharp.API.Core.Listeners.OnMapStart>(ev =>
             {
-                spawnTerroristOffset = 0;
-                Server.ExecuteCommand("mp_give_player_c4 0");
-                models.Clear();
+                if (PropHuntEnabled)
+                {
+                    spawnTerroristOffset = 0;
+                    Server.ExecuteCommand("mp_give_player_c4 0");
+                    models.Clear();
+                }
 
             });
 
             RegisterListener<Listeners.OnEntitySpawned>(entity =>
             {
-                if (entity.DesignerName == "prop_physics_multiplayer")
+                if (PropHuntEnabled)
                 {
-                    var prop = new CPhysicsPropMultiplayer(entity.Handle);
-
-                    // Until i fix it it doesnt work
-                    //var getModel = new VirtualFunctionWithReturn<IntPtr,string>(GETMODELSIGNATURE);
-                    //string model = getModel.Invoke(entity.Handle);
-                    //Console.WriteLine(model);
-
-                    var GETMODELSIGNATURE = "\\x40\\x53\\x48\\x83\\xEC\\x20\\x48\\x8B\\x41\\x30\\x48\\x8B\\xD9\\x48\\x8B\\x48\\x08\\x48\\x8B\\x01\\x2A\\x2A\\x2A\\x48\\x85";
-                    var GETMODELSIGNATURE_LINUX = "\\x55\\x48\\x89\\xE5\\x53\\x48\\x89\\xFB\\x48\\x83\\xEC\\x08\\x48\\x8B\\x47\\x30";
-                    
-                    var getModel = new VirtualFunctionWithReturn<IntPtr, string>(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? GETMODELSIGNATURE_LINUX : GETMODELSIGNATURE);
-                    string model = getModel.Invoke(entity.Handle);
-
-                    if (!models.Contains(model))
+                    if (entity.DesignerName == "prop_physics_multiplayer")
                     {
-                        models.Add(model);
-                        Console.WriteLine(model);
+                        var prop = new CPhysicsPropMultiplayer(entity.Handle);
+
+                        // Until i fix it it doesnt work
+                        //var getModel = new VirtualFunctionWithReturn<IntPtr,string>(GETMODELSIGNATURE);
+                        //string model = getModel.Invoke(entity.Handle);
+                        //Console.WriteLine(model);
+
+                        var GETMODELSIGNATURE = "\\x40\\x53\\x48\\x83\\xEC\\x20\\x48\\x8B\\x41\\x30\\x48\\x8B\\xD9\\x48\\x8B\\x48\\x08\\x48\\x8B\\x01\\x2A\\x2A\\x2A\\x48\\x85";
+                        var GETMODELSIGNATURE_LINUX = "\\x55\\x48\\x89\\xE5\\x53\\x48\\x89\\xFB\\x48\\x83\\xEC\\x08\\x48\\x8B\\x47\\x30";
+
+                        var getModel = new VirtualFunctionWithReturn<IntPtr, string>(RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? GETMODELSIGNATURE_LINUX : GETMODELSIGNATURE);
+                        string model = getModel.Invoke(entity.Handle);
+
+                        if (!models.Contains(model))
+                        {
+                            models.Add(model);
+                            Console.WriteLine(model);
+                        }
+
+
+                    }
+                    if (entity.DesignerName == "func_buyzone")
+                    {
+                        entity.Remove();
                     }
 
-                    
+                    if (entity.DesignerName == "info_player_terrorist")
+                    {
+                        var spawn = new CInfoPlayerTerrorist(entity.Handle);
+
+                        if (Server.MapName == "de_mirage")
+                        {
+                            if (spawnTerroristOffset > mirageSpawns.Length - 1) spawnTerroristOffset = 0;
+                            spawn.Teleport(mirageSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                        }
+                        if (Server.MapName == "de_inferno")
+                        {
+                            if (spawnTerroristOffset > infernoSpawns.Length - 1) spawnTerroristOffset = 0;
+                            spawn.Teleport(infernoSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                        }
+                        if (Server.MapName == "cs_office")
+                        {
+                            if (spawnTerroristOffset > officeSpawns.Length - 1) spawnTerroristOffset = 0;
+                            spawn.Teleport(officeSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                        }
+                        spawnTerroristOffset += 1;
+
+
+                    }
                 }
-                if(entity.DesignerName == "func_buyzone")
-                {
-                    entity.Remove();
-                }
-
-                if (entity.DesignerName == "info_player_terrorist")
-                {
-                    var spawn = new CInfoPlayerTerrorist(entity.Handle);
-
-                    if (Server.MapName == "de_mirage")
-                    {
-                        if (spawnTerroristOffset > mirageSpawns.Length-1) spawnTerroristOffset = 0;
-                        spawn.Teleport(mirageSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
-                    }
-                    if (Server.MapName == "de_inferno")
-                    {
-                        if (spawnTerroristOffset > infernoSpawns.Length - 1) spawnTerroristOffset = 0;
-                        spawn.Teleport(infernoSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
-                    }
-                    if (Server.MapName == "cs_office")
-                    {
-                        if (spawnTerroristOffset > officeSpawns.Length - 1) spawnTerroristOffset = 0;
-                        spawn.Teleport(officeSpawns[spawnTerroristOffset], new QAngle(0, 0, 0), new Vector(0, 0, 0));
-                    }
-                    spawnTerroristOffset += 1;
-
-
-                }
-
             });
             RegisterEventHandler<EventRoundStart>((ev,@info) =>
             {
-                hideTime = DateTime.Now.AddMinutes(1);
-                teleportedPlayers = false;
-                props.Clear();
-
-                if (Server.MapName == "de_mirage")
+                if (PropHuntEnabled)
                 {
-                    var offset = -20;
+                    hideTime = DateTime.Now.AddMinutes(1);
+                    teleportedPlayers = false;
+                    props.Clear();
 
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -240));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -210));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -180));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -150));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -120));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -90));
-
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -240));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -210));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -180));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -150));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -120));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -90));
-
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -240));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -210));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -180));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -150));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -120));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -90));
-
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -240));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -210));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -180));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -150));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -120));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -90));
-
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -240));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -210));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -180));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -150));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -120));
-                    CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -90));
-                }
-                foreach (var player in Utilities.GetPlayers())
-                {
-                    try
+                    if (Server.MapName == "de_mirage")
                     {
-                        if (player.Team == CsTeam.CounterTerrorist)
-                        {
-                            PropSpawner(player,true);
+                        var offset = -20;
 
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -240));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -210));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -180));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -150));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -120));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1235 + offset, 543, -90));
+
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -240));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -210));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -180));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -150));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -120));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1265 + offset, 543, -90));
+
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -240));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -210));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -180));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -150));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -120));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1295 + offset, 543, -90));
+
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -240));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -210));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -180));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -150));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -120));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1325 + offset, 543, -90));
+
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -240));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -210));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -180));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -150));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -120));
+                        CreateProp("models/dev/dev_cube.vmdl", new Vector(1355 + offset, 543, -90));
+                    }
+                    foreach (var player in Utilities.GetPlayers())
+                    {
+                        try
+                        {
+                            if (player.Team == CsTeam.CounterTerrorist)
+                            {
+                                PropSpawner(player, true);
+
+                            }
                         }
-                    } catch (Exception e) { 
-                        // Shut the f up
+                        catch (Exception e)
+                        {
+                            // Shut the f up
+                        }
                     }
                 }
-
                 return HookResult.Continue;
             },HookMode.Post);
 
             RegisterListener<Listeners.OnTick>(() =>
             {
-                int offs = 0;
-                var players = Utilities.GetPlayers();
-                foreach (var player in players)
+                if (PropHuntEnabled)
                 {
-                    if (hideTime.CompareTo(DateTime.Now) > 0) {
-                        player.PrintToCenter("Hiding time: " + hideTime.Subtract(DateTime.Now).ToString("mm\\:ss"));
-
-                        if (player.TeamNum == 2)
-                        {
-                            player.RemoveWeapons();
-                        }
-
-                    } else if (!teleportedPlayers)
+                    int offs = 0;
+                    var players = Utilities.GetPlayers();
+                    foreach (var player in players)
                     {
-                        if (player.Pawn.IsValid)
+                        if (hideTime.CompareTo(DateTime.Now) > 0)
                         {
-                            if (player.TeamNum == 2)
-                            {
-                                if (Server.MapName == "de_mirage")
-                                {
-                                    player.Pawn.Value.Teleport(new Vector(1316, -421 + offs, -103), new QAngle(0, -180, 0), new Vector(0, 0, 0));
-                                }
-                                if (Server.MapName == "de_inferno")
-                                {
-                                    player.Pawn.Value.Teleport(new Vector(670 - offs, 494, 136), new QAngle(0, 0, 0), new Vector(0, 0, 0));
-                                }
-                                if (Server.MapName == "cs_office")
-                                {
-                                    player.Pawn.Value.Teleport(new Vector(814 - offs, -495, -110), new QAngle(0, 0, 0), new Vector(0, 0, 0));
-                                }
-                                offs += 30;
+                            player.PrintToCenter("Hiding time: " + hideTime.Subtract(DateTime.Now).ToString("mm\\:ss"));
 
-                                player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.P90);
-                                player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.Knife);
-                                player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.USP);
-                            }
-                            if(player.TeamNum == 3)
+                            if (player.TeamNum == 2)
                             {
                                 player.RemoveWeapons();
                             }
-                        }
-                    }
-                    if (!player.Pawn.IsValid) continue;
-                    
-                    bool found = false;
-                    foreach (var item in props)
-                    {
 
-                        if (item.playerId == player.SteamID)
+                        }
+                        else if (!teleportedPlayers)
                         {
-                            if (player.Team == CsTeam.Spectator || !player.PawnIsAlive)
+                            if (player.Pawn.IsValid)
                             {
-                                item.prop.Remove();
-                                props.Remove(item);
+                                if (player.TeamNum == 2)
+                                {
+                                    if (Server.MapName == "de_mirage")
+                                    {
+                                        player.Pawn.Value.Teleport(new Vector(1316, -421 + offs, -103), new QAngle(0, -180, 0), new Vector(0, 0, 0));
+                                    }
+                                    if (Server.MapName == "de_inferno")
+                                    {
+                                        player.Pawn.Value.Teleport(new Vector(670 - offs, 494, 136), new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                                    }
+                                    if (Server.MapName == "cs_office")
+                                    {
+                                        player.Pawn.Value.Teleport(new Vector(814 - offs, -495, -110), new QAngle(0, 0, 0), new Vector(0, 0, 0));
+                                    }
+                                    offs += 30;
+
+                                    player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.P90);
+                                    player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.Knife);
+                                    player.GiveNamedItem(CounterStrikeSharp.API.Modules.Entities.Constants.CsItem.USP);
+                                }
+                                if (player.TeamNum == 3)
+                                {
+                                    player.RemoveWeapons();
+                                }
+                            }
+                        }
+                        if (!player.Pawn.IsValid) continue;
+
+                        bool found = false;
+                        foreach (var item in props)
+                        {
+
+                            if (item.playerId == player.SteamID)
+                            {
+                                if (player.Team == CsTeam.Spectator || !player.PawnIsAlive)
+                                {
+                                    item.prop.Remove();
+                                    props.Remove(item);
+                                    break;
+                                }
+                                if (!player.Pawn.IsValid) continue;
+
+                                var buttons = player.Buttons;
+                                if ((buttons & PlayerButtons.Use) != 0)
+                                {
+                                    if (!item.AtkOnce)
+                                    {
+                                        PropFreezer(player, null);
+                                        item.AtkOnce = true;
+                                    }
+                                }
+                                else
+                                {
+                                    item.AtkOnce = false;
+                                }
+                                if ((buttons & PlayerButtons.Attack2) != 0)
+                                {
+                                    if (!item.Atk2Once)
+                                    {
+                                        PropSpawner(player);
+                                        item.Atk2Once = true;
+                                    }
+                                }
+                                else
+                                {
+                                    item.Atk2Once = false;
+                                }
+                                if ((buttons & PlayerButtons.Reload) != 0)
+                                {
+                                    if (!item.RelOnce)
+                                    {
+                                        spawnDecoy(player, null);
+                                        item.RelOnce = true;
+                                    }
+                                }
+                                else
+                                {
+                                    item.RelOnce = false;
+                                }
+
+
+                                var off = offset(player.Pawn.Value.AbsOrigin, new Vector(0, 0, 0));
+                                if (!item.Frozen)
+                                {//|| item.lastPlayerPos.X != off.X || item.lastPlayerPos.Z != off.Z || item.lastPlayerPos.Y != off.Y || item.weirdStuff) { 
+                                    item.Teleport(off, /*new QAngle(item.prop.AbsRotation.X, player.Pawn.Value.AbsRotation.Y, item.prop.AbsRotation.Z)*/ new QAngle(0, player.Pawn.Value.AbsRotation.Y, 0));
+                                    //item.weirdStuff = !(item.lastPlayerPos2.X == item.lastPlayerPos.X && item.lastPlayerPos2.Z == item.lastPlayerPos.Z && item.lastPlayerPos2.Y == item.lastPlayerPos.Y);
+                                    item.weirdStuff = false;
+                                    player.GravityScale = 1;
+                                }
+                                else
+                                {
+                                    if (CalculateDistance(item.prop.AbsOrigin, player.Pawn.Value.AbsOrigin) > 5 || true)
+                                    {
+                                        player.Pawn.Value.Teleport(item.prop.AbsOrigin, new QAngle(IntPtr.Zero), new Vector(0, 0, 0));
+                                    }
+                                    player.GravityScale = 0;
+
+                                    //item.Teleport(off);
+
+                                }
+                                if (hideTime.CompareTo(DateTime.Now) <= 0) player.PrintToCenter("Swaps left: " + item.Swaps + ", You are " + (item.Frozen ? "" : "not ") + "frozen.");
+                                found = true;
                                 break;
                             }
-                            if (!player.Pawn.IsValid) continue;
-
-                            var buttons = player.Buttons;
-                            if ((buttons & PlayerButtons.Use) != 0)
-                            {
-                                if (!item.AtkOnce)
-                                {
-                                    PropFreezer(player, null);
-                                    item.AtkOnce = true;
-                                }
-                            } else
-                            {
-                                item.AtkOnce = false;
-                            }
-                            if ((buttons & PlayerButtons.Attack2) != 0)
-                            {
-                                if (!item.Atk2Once)
-                                {
-                                    PropSpawner(player);
-                                    item.Atk2Once = true;
-                                }
-                            }
-                            else
-                            {
-                                item.Atk2Once = false;
-                            }
-                            if ((buttons & PlayerButtons.Reload) != 0)
-                            {
-                                if (!item.RelOnce)
-                                {
-                                    spawnDecoy(player, null);
-                                    item.RelOnce = true;
-                                }
-                            }
-                            else
-                            {
-                                item.RelOnce = false;
-                            }
-
-
-                            var off = offset(player.Pawn.Value.AbsOrigin, new Vector(0, 0, 0));
-                            if (!item.Frozen ) {//|| item.lastPlayerPos.X != off.X || item.lastPlayerPos.Z != off.Z || item.lastPlayerPos.Y != off.Y || item.weirdStuff) { 
-                                item.Teleport(off, /*new QAngle(item.prop.AbsRotation.X, player.Pawn.Value.AbsRotation.Y, item.prop.AbsRotation.Z)*/ new QAngle(0, player.Pawn.Value.AbsRotation.Y, 0));
-                                //item.weirdStuff = !(item.lastPlayerPos2.X == item.lastPlayerPos.X && item.lastPlayerPos2.Z == item.lastPlayerPos.Z && item.lastPlayerPos2.Y == item.lastPlayerPos.Y);
-                                item.weirdStuff = false;
-                                player.GravityScale = 1;
-                            }                       
-                            else
-                            {
-                                if (CalculateDistance(item.prop.AbsOrigin, player.Pawn.Value.AbsOrigin) > 5 || true)
-                                {
-                                    player.Pawn.Value.Teleport(item.prop.AbsOrigin, new QAngle(IntPtr.Zero), new Vector(0,0,0));
-                                }
-                                player.GravityScale = 0;
-
-                                //item.Teleport(off);
-
-                            }
-                            if (hideTime.CompareTo(DateTime.Now) <= 0) player.PrintToCenter("Swaps left: " + item.Swaps + ", You are " + (item.Frozen ? "" : "not ") + "frozen.");
-                            found = true;
-                            break;
                         }
+                        if (found)
+                        {
+                            if (!player.Pawn.IsValid) continue;
+                            player.Pawn.Value.ShadowStrength = 0;
+                            player.Pawn.Value.Collision.BoundingRadius = 5f;
+                            player.Pawn.Value.Render = Color.FromArgb(0, 0, 0, 0);
+
+
+                        }
+                        else
+                        {
+                            if (!player.Pawn.IsValid) continue;
+                            player.Pawn.Value.ShadowStrength = 1;
+
+                            player.Pawn.Value.Render = Color.FromArgb(255, 0, 0, 0);
+                        }
+
                     }
-                    if (found)
+                    if (hideTime.CompareTo(DateTime.Now) <= 0 && !teleportedPlayers)
                     {
-                        if (!player.Pawn.IsValid) continue;
-                        player.Pawn.Value.ShadowStrength = 0;
-                        player.Pawn.Value.Collision.BoundingRadius = 5f;
-                        player.Pawn.Value.Render = Color.FromArgb(0, 0, 0, 0);
-
-                        
+                        teleportedPlayers = true;
                     }
-                    else
-                    {
-                        if (!player.Pawn.IsValid) continue;
-                        player.Pawn.Value.ShadowStrength = 1;
-
-                        player.Pawn.Value.Render = Color.FromArgb(255, 0, 0, 0);
-                    }
-
-                }
-                if(hideTime.CompareTo(DateTime.Now) <= 0 && !teleportedPlayers)
-                {
-                    teleportedPlayers = true;
                 }
             });
 
             HookEntityOutput("prop_dynamic", "OnTakeDamage", (CEntityIOOutput output, string name, CEntityInstance activator, CEntityInstance caller, CVariant value, float delay) =>
             {
-                caller.Remove();
-
+                if (PropHuntEnabled)
+                {
+                    caller.Remove();
+                }
                 return HookResult.Continue;
             });
         }
@@ -421,9 +454,26 @@ namespace CS2PropHunt
 
         List<SpecialProp> props = new List<SpecialProp>();
 
+        [ConsoleCommand("whistle", "Spawn a fake prop at your legs")]
+        public void whistle(CCSPlayerController? player, CommandInfo? command)
+        {
+            if (!PropHuntEnabled) return;
+            if (player == null)
+            {
+                return;
+            }
+
+            CSoundEventEntity prop = Utilities.CreateEntityByName<CSoundEventEntity>("point_soundevent");
+            prop.DispatchSpawn();
+            prop.SoundName = "sounds/ambient/animal/bird15.vsnd";
+            prop.Teleport(player.Pawn.Value.AbsOrigin, new QAngle(0, 0, 0), new Vector(0, 0, 0));
+            prop.StartOnSpawn = true;
+        }
+
         [ConsoleCommand("spawn_decoy", "Spawn a fake prop at your legs")]
         public void spawnDecoy(CCSPlayerController? player, CommandInfo? command)
         {
+            if (!PropHuntEnabled) return;
             SpecialProp? foundProp = null;
             foreach (var item in props)
             {
@@ -455,6 +505,7 @@ namespace CS2PropHunt
         [ConsoleCommand("swap_prop", "Swap prop for another prop (infinite times when hiding time, after that only 2 times)")]
         public void spawnProp(CCSPlayerController? player, CommandInfo command)
         {
+            if (!PropHuntEnabled) return;
             PropSpawner(player);
         }
         public void PropSpawner(CCSPlayerController? player, bool allowCreate = false)
@@ -524,6 +575,7 @@ namespace CS2PropHunt
         [ConsoleCommand("freeze_prop", "Freeze prop")]
         public void PropFreezer(CCSPlayerController? player, CommandInfo? command)
         {
+            if (!PropHuntEnabled) return;
             if (player == null)
             {
                 return;
